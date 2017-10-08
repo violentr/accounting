@@ -1,0 +1,23 @@
+<%= link_to "Log Out", destroy_session_path(current_user), method: :delete %>
+
+<p> Loged in as: <%= current_user.email %> </p>
+  <div> Your balance is <%= @account.balance %> <strong> <%= @account.currency %> </strong></div>
+  <% if @account.balance.to_i > 0 && User.count > 1 %>
+    <div> Transactions: </div>
+    <ul>
+      <% current_user.eur_account.transactions.each do |transaction| %>
+        <% if transaction.credit_user %>
+          <li><%= transaction.created_at %> <strong> <%= transaction.amount %> <%= @account.currency %> </strong> was paid by <%= User.find_by(id: transaction.credit_user)&.email%> [+] </li>
+        <% else %>
+          <li><%= transaction.created_at %> <strong><%= transaction.amount %> <%= @account.currency %></strong> was paid to <%= User.find_by(id: transaction.debit_user).email %> [-]</li>
+        <% end %>
+      <% end %>
+    </ul>
+    <%= form_for :transaction, url: {controller: :accounts, action: :make_payment}  do |f| %>
+      <div> Make payment to: </div>
+      <%= select_tag :user, options_for_select(User.all_except(current_user)) %>
+      <%= f.label :amount %>
+      <%= f.text_field :amount %>
+      <%= f.submit "OK" %>
+    <% end %>
+  <% end %> 
